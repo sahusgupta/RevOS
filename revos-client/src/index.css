@@ -4,25 +4,25 @@
 
 @layer base {
   :root {
-    /* Aggie Maroon & Gold Light Theme - Light Maroon Background */
-    --background: 0 15% 96%; /* Very light maroon background */
+    /* Aggie Maroon & Gold Light Theme - Varying Degrees of Maroon */
+    --background: 0 20% 92%; /* Light maroon background */
     --foreground: 0 0% 0%; /* Pure black text */
-    --card: 0 10% 98%; /* Almost white cards with slight maroon tint */
+    --card: 0 15% 95%; /* Lighter maroon cards */
     --card-foreground: 0 0% 0%; /* Pure black text on cards */
-    --popover: 0 10% 98%;
+    --popover: 0 15% 95%;
     --popover-foreground: 0 0% 0%; /* Pure black text */
     --primary: 0 100% 31%; /* Aggie Maroon #500000 */
     --primary-foreground: 0 0% 100%; /* White text on maroon */
     --secondary: 45 65% 55%; /* Aggie Gold #CFAF5A */
     --secondary-foreground: 0 0% 0%; /* Pure black text on gold */
-    --muted: 0 10% 90%; /* Light maroon muted */
+    --muted: 0 12% 88%; /* Light maroon muted */
     --muted-foreground: 0 0% 20%; /* Dark gray text for muted elements */
-    --accent: 0 15% 88%; /* Light maroon accent */
+    --accent: 0 18% 85%; /* Light maroon accent */
     --accent-foreground: 0 0% 0%; /* Pure black accent text */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 15% 75%; /* More visible maroon border */
-    --input: 0 8% 94%; /* Light maroon input background */
+    --border: 0 18% 75%; /* Maroon border */
+    --input: 0 12% 90%; /* Light maroon input background */
     --ring: 0 100% 31%; /* Maroon focus ring */
     --radius: 0.5rem;
     
@@ -32,25 +32,25 @@
   }
 
   .dark {
-    /* Aggie Maroon & Gold Dark Theme - Dark Maroon Background */
-    --background: 0 30% 8%; /* Dark maroon background */
+    /* Aggie Maroon & Gold Dark Theme - Varying Degrees of Dark Maroon */
+    --background: 0 35% 10%; /* Dark maroon background */
     --foreground: 0 0% 100%; /* Pure white text */
-    --card: 0 25% 12%; /* Darker maroon cards */
+    --card: 0 30% 15%; /* Medium dark maroon cards */
     --card-foreground: 0 0% 100%; /* Pure white text on cards */
-    --popover: 0 25% 12%;
+    --popover: 0 30% 15%;
     --popover-foreground: 0 0% 100%; /* Pure white text */
     --primary: 0 100% 31%; /* Same Aggie Maroon */
     --primary-foreground: 0 0% 100%; /* White text on maroon */
     --secondary: 45 65% 65%; /* Brighter gold for dark mode */
     --secondary-foreground: 0 0% 0%; /* Pure black text on gold */
-    --muted: 0 25% 15%; /* Dark maroon muted */
+    --muted: 0 28% 18%; /* Dark maroon muted */
     --muted-foreground: 0 0% 80%; /* Light gray text for muted elements */
-    --accent: 0 30% 18%; /* Dark maroon accent */
+    --accent: 0 32% 22%; /* Dark maroon accent */
     --accent-foreground: 0 0% 100%; /* Pure white accent text */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 25% 20%; /* Dark maroon border */
-    --input: 0 25% 15%; /* Dark maroon input background */
+    --border: 0 28% 25%; /* Dark maroon border */
+    --input: 0 30% 18%; /* Dark maroon input background */
     --ring: 45 65% 65%; /* Gold focus ring in dark mode */
     
     /* Custom Aggie colors for dark mode */

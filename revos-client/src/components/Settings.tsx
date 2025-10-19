@@ -5,18 +5,18 @@ import { Switch } from './ui/switch';
 import { Label } from './ui/label';
 import { Separator } from './ui/separator';
 import { Badge } from './ui/badge';
-import { 
-  Settings as SettingsIcon, 
-  Moon, 
-  Sun, 
-  Palette, 
-  Bell, 
-  Shield, 
-  User, 
+import {
+  Settings as SettingsIcon,
+  Moon,
+  Sun,
+  Palette,
+  Bell,
+  Shield,
+  User,
   Globe,
   Monitor
 } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 
 type Theme = 'light' | 'dark' | 'system';
 
@@ -25,7 +25,7 @@ export function Settings() {
     const saved = localStorage.getItem('theme') as Theme;
     return saved || 'system';
   });
-  
+
   const [notifications, setNotifications] = useState(() => {
     const saved = localStorage.getItem('notifications');
     return saved ? JSON.parse(saved) : {
@@ -48,14 +48,14 @@ export function Settings() {
   // Apply theme to document
   useEffect(() => {
     const root = document.documentElement;
-    
+
     if (theme === 'system') {
       const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
       root.classList.toggle('dark', systemTheme === 'dark');
     } else {
       root.classList.toggle('dark', theme === 'dark');
     }
-    
+
     localStorage.setItem('theme', theme);
   }, [theme]);
 
@@ -116,7 +116,7 @@ export function Settings() {
                 <Palette className="w-5 h-5 text-secondary" />
                 <h2 className="text-xl font-semibold text-foreground">Appearance</h2>
               </div>
-              
+
               <div className="space-y-4">
                 <div>
                   <Label className="text-foreground/80 text-sm font-medium mb-3 block">
@@ -130,8 +130,8 @@ export function Settings() {
                         size="sm"
                         onClick={() => handleThemeChange(value as Theme)}
                         className={`flex flex-col items-center gap-2 h-auto py-3 ${
-                          theme === value 
-                            ? 'bg-primary hover:bg-primary/90 text-primary-foreground border-secondary' 
+                          theme === value
+                            ? 'bg-primary hover:bg-primary/90 text-primary-foreground border-secondary'
                             : 'border-border text-muted-foreground hover:border-secondary/50 hover:text-foreground'
                         }`}
                       >
@@ -143,18 +143,6 @@ export function Settings() {
                 </div>
 
                 <Separator className="bg-border" />
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-foreground/80">Aggie Maroon Theme</Label>
-                    <Badge variant="secondary" className="bg-primary/20 text-secondary border-secondary/30">
-                      Active
-                    </Badge>
-                  </div>
-                  <p className="text-muted-foreground text-sm">
-                    Using Texas A&M colors with dynamic accent adjustments
-                  </p>
-                </div>
               </div>
             </GlassPanel>
           </motion.div>
@@ -170,7 +158,7 @@ export function Settings() {
                 <Bell className="w-5 h-5 text-secondary" />
                 <h2 className="text-xl font-semibold text-foreground">Notifications</h2>
               </div>
-              
+
               <div className="space-y-4">
                 {[
                   { key: 'assignments', label: 'Assignment Reminders', description: 'Get notified about upcoming deadlines' },
@@ -205,7 +193,7 @@ export function Settings() {
                 <Shield className="w-5 h-5 text-secondary" />
                 <h2 className="text-xl font-semibold text-foreground">Privacy & Security</h2>
               </div>
-              
+
               <div className="space-y-4">
                 {[
                   { key: 'autoSave', label: 'Auto-save Data', description: 'Automatically save your progress' },
@@ -239,7 +227,7 @@ export function Settings() {
                 <User className="w-5 h-5 text-secondary" />
                 <h2 className="text-xl font-semibold text-foreground">Account</h2>
               </div>
-              
+
               <div className="space-y-4">
                 <div className="p-4 rounded-lg bg-card border border-border">
                   <div className="flex items-center gap-3">
@@ -254,15 +242,15 @@ export function Settings() {
                 </div>
 
                 <div className="space-y-2">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="w-full justify-start border-border text-muted-foreground hover:border-secondary/50 hover:text-foreground"
                   >
                     <Globe className="w-4 h-4 mr-2" />
                     Language & Region
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="w-full justify-start border-border text-muted-foreground hover:border-secondary/50 hover:text-foreground"
                   >
                     <Shield className="w-4 h-4 mr-2" />
@@ -273,21 +261,6 @@ export function Settings() {
             </GlassPanel>
           </motion.div>
         </div>
-
-        {/* Save Button */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="flex justify-center pt-6"
-        >
-          <Button 
-            size="lg"
-            className="bg-primary hover:bg-primary/90 text-primary-foreground border border-secondary/30 px-8"
-          >
-            Save Changes
-          </Button>
-        </motion.div>
       </div>
     </div>
   );

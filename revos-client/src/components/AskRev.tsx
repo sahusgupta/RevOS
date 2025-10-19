@@ -3,7 +3,8 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { ScrollArea } from './ui/scroll-area';
 import { Badge } from './ui/badge';
-import { Send, Sparkles, Bot, User } from 'lucide-react';
+import { Send, Bot, User } from 'lucide-react';
+import { RevLogo } from './RevLogo';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState } from 'react';
 
@@ -15,7 +16,12 @@ interface Message {
   suggestions?: string[];
 }
 
-export function AskRev() {
+interface AskRevProps {
+  authToken?: string;
+  apiBaseUrl?: string;
+}
+
+export function AskRev({ authToken, apiBaseUrl = 'http://localhost:5000' }: AskRevProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
@@ -87,22 +93,18 @@ export function AskRev() {
         className="mb-6"
       >
         <div className="flex items-center gap-3 mb-2">
-          <motion.div
-            animate={{ rotate: [0, 360] }}
-            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-            className="w-12 h-12 rounded-2xl gradient-maroon glow-maroon flex items-center justify-center"
-          >
-            <Sparkles className="w-6 h-6 text-[#CFAF5A]" />
-          </motion.div>
+          <div className="w-12 h-12 rounded-2xl gradient-maroon glow-maroon flex items-center justify-center p-2">
+            <RevLogo size="lg" className="text-secondary" />
+          </div>
           <div>
-            <h1 className="text-white">Ask Rev</h1>
-            <p className="text-white/60">Your AI-powered Aggie assistant</p>
+            <h1 className="text-foreground">Ask Rev</h1>
+            <p className="text-muted-foreground">Your AI-powered Aggie assistant</p>
           </div>
         </div>
         <div className="flex gap-2 mt-4">
-          <Badge className="bg-[#CFAF5A]/20 text-[#CFAF5A] border-[#CFAF5A]">Syllabus Analysis</Badge>
-          <Badge className="bg-[#CFAF5A]/20 text-[#CFAF5A] border-[#CFAF5A]">Study Planning</Badge>
-          <Badge className="bg-[#CFAF5A]/20 text-[#CFAF5A] border-[#CFAF5A]">Budget Help</Badge>
+          <Badge className="bg-secondary/20 text-secondary border-secondary">Syllabus Analysis</Badge>
+          <Badge className="bg-secondary/20 text-secondary border-secondary">Study Planning</Badge>
+          <Badge className="bg-secondary/20 text-secondary border-secondary">Budget Help</Badge>
         </div>
       </motion.div>
 
@@ -121,23 +123,25 @@ export function AskRev() {
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
                     message.type === 'ai' 
                       ? 'gradient-maroon glow-maroon' 
-                      : 'bg-[#CFAF5A] glow-gold'
+                      : 'bg-secondary glow-gold'
                   }`}>
                     {message.type === 'ai' ? (
-                      <Bot className="w-5 h-5 text-white" />
+                      <Bot className="w-5 h-5 text-primary-foreground" />
                     ) : (
-                      <User className="w-5 h-5 text-[#500000]" />
+                      <User className="w-5 h-5 text-secondary-foreground" />
                     )}
                   </div>
                   <div className={`flex-1 max-w-[80%] ${message.type === 'user' ? 'items-end' : 'items-start'} flex flex-col`}>
                     <div className={`p-4 rounded-2xl ${
                       message.type === 'ai' 
                         ? 'glass-card' 
-                        : 'bg-[#500000] glow-maroon'
+                        : 'bg-primary glow-maroon'
                     }`}>
-                      <p className="text-white whitespace-pre-wrap">{message.content}</p>
+                      <p className={`whitespace-pre-wrap ${
+                        message.type === 'ai' ? 'text-foreground' : 'text-primary-foreground'
+                      }`}>{message.content}</p>
                     </div>
-                    <span className="text-white/40 mt-1 px-2">{message.timestamp}</span>
+                    <span className="text-muted-foreground mt-1 px-2">{message.timestamp}</span>
                     
                     {message.suggestions && message.type === 'ai' && (
                       <div className="flex flex-wrap gap-2 mt-3">
@@ -147,7 +151,7 @@ export function AskRev() {
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={() => handleSuggestionClick(suggestion)}
-                            className="px-3 py-1.5 rounded-lg glass-card text-[#CFAF5A] hover:bg-[#CFAF5A]/10 transition-colors border border-[#CFAF5A]/30"
+                            className="px-3 py-1.5 rounded-lg glass-card text-secondary hover:bg-secondary/10 transition-colors border border-secondary/30"
                           >
                             {suggestion}
                           </motion.button>
@@ -166,24 +170,24 @@ export function AskRev() {
                 className="flex gap-3"
               >
                 <div className="w-10 h-10 rounded-xl gradient-maroon glow-maroon flex items-center justify-center">
-                  <Bot className="w-5 h-5 text-white" />
+                  <Bot className="w-5 h-5 text-primary-foreground" />
                 </div>
                 <div className="glass-card p-4 rounded-2xl">
                   <div className="flex gap-2">
                     <motion.div
                       animate={{ opacity: [0.3, 1, 0.3] }}
                       transition={{ duration: 1.5, repeat: Infinity, delay: 0 }}
-                      className="w-2 h-2 rounded-full bg-[#CFAF5A]"
+                      className="w-2 h-2 rounded-full bg-secondary"
                     />
                     <motion.div
                       animate={{ opacity: [0.3, 1, 0.3] }}
                       transition={{ duration: 1.5, repeat: Infinity, delay: 0.2 }}
-                      className="w-2 h-2 rounded-full bg-[#CFAF5A]"
+                      className="w-2 h-2 rounded-full bg-secondary"
                     />
                     <motion.div
                       animate={{ opacity: [0.3, 1, 0.3] }}
                       transition={{ duration: 1.5, repeat: Infinity, delay: 0.4 }}
-                      className="w-2 h-2 rounded-full bg-[#CFAF5A]"
+                      className="w-2 h-2 rounded-full bg-secondary"
                     />
                   </div>
                 </div>
@@ -198,7 +202,7 @@ export function AskRev() {
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             placeholder="Ask Rev anything..."
-            className="flex-1 bg-white/5 border-[#CFAF5A]/30 text-white placeholder:text-white/40 focus:border-[#CFAF5A] focus:ring-[#CFAF5A]"
+            className="flex-1 bg-white/5 border-secondary/30 text-foreground placeholder:text-muted-foreground focus:border-secondary focus:ring-secondary"
           />
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button

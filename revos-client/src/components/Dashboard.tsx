@@ -17,9 +17,9 @@ export function Dashboard() {
   ];
 
   const insights = [
-    { icon: BookOpen, label: 'Study Hours', value: '18.5 hrs', change: '+12%', color: 'text-[#CFAF5A]' },
+    { icon: BookOpen, label: 'Study Hours', value: '18.5 hrs', change: '+12%', color: 'text-secondary' },
     { icon: DollarSign, label: 'Budget Left', value: '$342', change: '-8%', color: 'text-green-400' },
-    { icon: TrendingUp, label: 'Productivity', value: '87%', change: '+5%', color: 'text-[#CFAF5A]' },
+    { icon: TrendingUp, label: 'Productivity', value: '87%', change: '+5%', color: 'text-secondary' },
   ];
 
   const upcomingEvents = [
@@ -37,14 +37,14 @@ export function Dashboard() {
         className="flex items-center justify-between"
       >
         <div>
-          <h1 className="text-[#CFAF5A] mb-2">Welcome back, Aggie!</h1>
-          <p className="text-white/60">Saturday, October 18, 2025</p>
+          <h1 className="text-secondary mb-2">Welcome back, Aggie!</h1>
+          <p className="text-muted-foreground">Saturday, October 18, 2025</p>
         </div>
         <motion.div
           whileHover={{ scale: 1.05 }}
           className="px-6 py-3 rounded-xl gradient-maroon glow-maroon"
         >
-          <p className="text-white">🎓 Current GPA: 3.85</p>
+          <p className="text-primary-foreground">🎓 Current GPA: 3.85</p>
         </motion.div>
       </motion.div>
 
@@ -54,8 +54,8 @@ export function Dashboard() {
         <div className="lg:col-span-2 space-y-6">
           <GlassPanel glow="maroon">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-white">Today's Tasks</h2>
-              <Badge className="bg-[#CFAF5A] text-[#500000]">4 pending</Badge>
+              <h2 className="text-foreground">Today's Tasks</h2>
+              <Badge className="bg-secondary text-secondary-foreground">4 pending</Badge>
             </div>
             <div className="space-y-3">
               {tasks.map((task, index) => (
@@ -65,18 +65,18 @@ export function Dashboard() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.1 }}
                   whileHover={{ scale: 1.02, x: 5 }}
-                  className="flex items-start gap-4 p-4 rounded-xl glass-card border-l-4 border-[#CFAF5A] cursor-pointer"
+                  className="flex items-start gap-4 p-4 rounded-xl glass-card border-l-4 border-secondary cursor-pointer"
                 >
                   {task.completed ? (
-                    <CheckCircle2 className="w-5 h-5 text-[#CFAF5A] mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-secondary mt-0.5 flex-shrink-0" />
                   ) : (
-                    <Circle className="w-5 h-5 text-white/40 mt-0.5 flex-shrink-0" />
+                    <Circle className="w-5 h-5 text-muted-foreground mt-0.5 flex-shrink-0" />
                   )}
                   <div className="flex-1">
-                    <p className={`text-white ${task.completed ? 'line-through opacity-60' : ''}`}>
+                    <p className={`text-foreground ${task.completed ? 'line-through opacity-60' : ''}`}>
                       {task.title}
                     </p>
-                    <p className="text-white/60">{task.due}</p>
+                    <p className="text-muted-foreground">{task.due}</p>
                   </div>
                   <Badge
                     variant="outline"
@@ -84,8 +84,8 @@ export function Dashboard() {
                       task.priority === 'high'
                         ? 'border-red-400 text-red-400'
                         : task.priority === 'medium'
-                        ? 'border-[#CFAF5A] text-[#CFAF5A]'
-                        : 'border-white/40 text-white/40'
+                        ? 'border-secondary text-secondary'
+                        : 'border-muted-foreground text-muted-foreground'
                     }`}
                   >
                     {task.priority}
@@ -107,8 +107,8 @@ export function Dashboard() {
               >
                 <GlassPanel className="text-center">
                   <insight.icon className={`w-8 h-8 mx-auto mb-3 ${insight.color}`} />
-                  <p className="text-white/60 mb-1">{insight.label}</p>
-                  <h3 className="text-white mb-1">{insight.value}</h3>
+                  <p className="text-muted-foreground mb-1">{insight.label}</p>
+                  <h3 className="text-foreground mb-1">{insight.value}</h3>
                   <p className={`${insight.change.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}>
                     {insight.change} this week
                   </p>
@@ -119,26 +119,26 @@ export function Dashboard() {
 
           {/* Weekly Progress */}
           <GlassPanel>
-            <h3 className="text-white mb-4">Weekly Progress</h3>
+            <h3 className="text-foreground mb-4">Weekly Progress</h3>
             <div className="space-y-4">
               <div>
                 <div className="flex justify-between mb-2">
-                  <span className="text-white/80">Assignments Completed</span>
-                  <span className="text-[#CFAF5A]">7/10</span>
+                  <span className="text-muted-foreground">Assignments Completed</span>
+                  <span className="text-secondary">7/10</span>
                 </div>
                 <Progress value={70} className="h-2 bg-white/10" />
               </div>
               <div>
                 <div className="flex justify-between mb-2">
-                  <span className="text-white/80">Study Goals</span>
-                  <span className="text-[#CFAF5A]">15/20 hrs</span>
+                  <span className="text-muted-foreground">Study Goals</span>
+                  <span className="text-secondary">15/20 hrs</span>
                 </div>
                 <Progress value={75} className="h-2 bg-white/10" />
               </div>
               <div>
                 <div className="flex justify-between mb-2">
-                  <span className="text-white/80">Budget Usage</span>
-                  <span className="text-[#CFAF5A]">$658/$1000</span>
+                  <span className="text-muted-foreground">Budget Usage</span>
+                  <span className="text-secondary">$658/$1000</span>
                 </div>
                 <Progress value={65.8} className="h-2 bg-white/10" />
               </div>
@@ -150,7 +150,7 @@ export function Dashboard() {
         <div className="space-y-6">
           {/* Calendar */}
           <GlassPanel glow="gold">
-            <h3 className="text-white mb-4">Calendar</h3>
+            <h3 className="text-foreground mb-4">Calendar</h3>
             <Calendar
               mode="single"
               selected={date}
@@ -162,8 +162,8 @@ export function Dashboard() {
           {/* Upcoming Events */}
           <GlassPanel>
             <div className="flex items-center gap-2 mb-4">
-              <CalendarIcon className="w-5 h-5 text-[#CFAF5A]" />
-              <h3 className="text-white">Today's Schedule</h3>
+              <CalendarIcon className="w-5 h-5 text-secondary" />
+              <h3 className="text-foreground">Today's Schedule</h3>
             </div>
             <div className="space-y-3">
               {upcomingEvents.map((event, index) => (
@@ -174,9 +174,9 @@ export function Dashboard() {
                   transition={{ delay: 0.6 + index * 0.1 }}
                   className="p-3 rounded-lg glass-card"
                 >
-                  <p className="text-[#CFAF5A]">{event.time}</p>
-                  <p className="text-white mt-1">{event.title}</p>
-                  <p className="text-white/60">{event.location}</p>
+                  <p className="text-secondary">{event.time}</p>
+                  <p className="text-foreground mt-1">{event.title}</p>
+                  <p className="text-muted-foreground">{event.location}</p>
                 </motion.div>
               ))}
             </div>

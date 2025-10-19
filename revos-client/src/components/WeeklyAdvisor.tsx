@@ -1,7 +1,8 @@
 import { GlassPanel } from './GlassPanel';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
-import { Sparkles, TrendingUp, Target, Brain, Clock, Award, CheckCircle } from 'lucide-react';
+import { TrendingUp, Target, Brain, Clock, Award, CheckCircle } from 'lucide-react';
+import { RevLogo } from './RevLogo';
 import { motion } from 'motion/react';
 
 export function WeeklyAdvisor() {
@@ -73,23 +74,19 @@ export function WeeklyAdvisor() {
         animate={{ opacity: 1, y: 0 }}
         className="flex items-center gap-4"
       >
-        <motion.div
-          animate={{ rotate: [0, 360] }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          className="w-16 h-16 rounded-2xl gradient-maroon glow-maroon flex items-center justify-center"
-        >
-          <Sparkles className="w-8 h-8 text-[#CFAF5A]" />
-        </motion.div>
+        <div className="w-16 h-16 rounded-2xl gradient-maroon glow-maroon flex items-center justify-center p-2">
+          <RevLogo size="xl" className="text-secondary" />
+        </div>
         <div>
-          <h1 className="text-white mb-1">Weekly Advisor Report</h1>
-          <p className="text-white/60">Week of October 14-18, 2025 • Personalized insights from Rev</p>
+          <h1 className="text-foreground mb-1">Weekly Advisor Report</h1>
+          <p className="text-foreground/60">Week of October 14-18, 2025 • Personalized insights from Rev</p>
         </div>
       </motion.div>
 
       {/* Performance Summary */}
       <GlassPanel glow="maroon" className="gradient-maroon">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-white">This Week's Performance</h2>
+          <h2 className="text-foreground">This Week's Performance</h2>
           <Badge className="bg-[#CFAF5A] text-[#500000]">
             Week 8 of 16
           </Badge>
@@ -109,8 +106,8 @@ export function WeeklyAdvisor() {
             >
               <TrendingUp className="w-6 h-6 text-[#500000]" />
             </motion.div>
-            <h3 className="text-white">{weekSummary.productivityScore}</h3>
-            <p className="text-white/60">Score</p>
+            <h3 className="text-foreground">{weekSummary.productivityScore}</h3>
+            <p className="text-foreground/60">Score</p>
           </motion.div>
 
           <motion.div
@@ -120,10 +117,10 @@ export function WeeklyAdvisor() {
             className="text-center p-4 rounded-xl glass-card"
           >
             <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-white/10 flex items-center justify-center">
-              <Clock className="w-6 h-6 text-[#CFAF5A]" />
+              <Clock className="w-6 h-6 text-secondary" />
             </div>
-            <h3 className="text-white">{weekSummary.studyHours}</h3>
-            <p className="text-white/60">Hours</p>
+            <h3 className="text-foreground">{weekSummary.studyHours}</h3>
+            <p className="text-foreground/60">Hours</p>
           </motion.div>
 
           <motion.div
@@ -133,10 +130,10 @@ export function WeeklyAdvisor() {
             className="text-center p-4 rounded-xl glass-card"
           >
             <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-white/10 flex items-center justify-center">
-              <CheckCircle className="w-6 h-6 text-[#CFAF5A]" />
+              <CheckCircle className="w-6 h-6 text-secondary" />
             </div>
-            <h3 className="text-white">{weekSummary.assignmentsCompleted}</h3>
-            <p className="text-white/60">Tasks</p>
+            <h3 className="text-foreground">{weekSummary.assignmentsCompleted}</h3>
+            <p className="text-foreground/60">Tasks</p>
           </motion.div>
 
           <motion.div
@@ -146,10 +143,10 @@ export function WeeklyAdvisor() {
             className="text-center p-4 rounded-xl glass-card"
           >
             <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-white/10 flex items-center justify-center">
-              <Target className="w-6 h-6 text-[#CFAF5A]" />
+              <Target className="w-6 h-6 text-secondary" />
             </div>
-            <h3 className="text-white">{weekSummary.goalsAchieved}</h3>
-            <p className="text-white/60">Goals</p>
+            <h3 className="text-foreground">{weekSummary.goalsAchieved}</h3>
+            <p className="text-foreground/60">Goals</p>
           </motion.div>
 
           <motion.div
@@ -158,18 +155,18 @@ export function WeeklyAdvisor() {
             transition={{ delay: 0.5 }}
             className="text-center p-4 rounded-xl glass-card"
           >
-            <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-white/10 flex items-center justify-center text-[#CFAF5A]">
+            <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-white/10 flex items-center justify-center text-secondary">
               🔥
             </div>
-            <h3 className="text-white">{weekSummary.streak}</h3>
-            <p className="text-white/60">Day Streak</p>
+            <h3 className="text-foreground">{weekSummary.streak}</h3>
+            <p className="text-foreground/60">Day Streak</p>
           </motion.div>
         </div>
       </GlassPanel>
 
       {/* AI Recommendations */}
       <div>
-        <h2 className="text-white mb-4">Rev's Recommendations</h2>
+        <h2 className="text-foreground mb-4">Rev's Recommendations</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {recommendations.map((rec, index) => {
             const Icon = rec.icon;
@@ -191,24 +188,24 @@ export function WeeklyAdvisor() {
                         ? 'gradient-maroon glow-maroon' 
                         : 'bg-white/10'
                     }`}>
-                      <Icon className="w-6 h-6 text-[#CFAF5A]" />
+                      <Icon className="w-6 h-6 text-secondary" />
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <h3 className="text-white">{rec.title}</h3>
+                        <h3 className="text-foreground">{rec.title}</h3>
                         <Badge
                           className={
                             rec.priority === 'high'
                               ? 'bg-red-500/20 text-red-400'
                               : rec.priority === 'medium'
-                              ? 'bg-[#CFAF5A]/20 text-[#CFAF5A]'
+                              ? 'bg-[#CFAF5A]/20 text-secondary'
                               : 'bg-blue-500/20 text-blue-400'
                           }
                         >
                           {rec.priority}
                         </Badge>
                       </div>
-                      <p className="text-white/70 mb-2">{rec.description}</p>
+                      <p className="text-foreground/70 mb-2">{rec.description}</p>
                       <div className="flex items-center gap-2">
                         <TrendingUp className="w-4 h-4 text-green-400" />
                         <span className="text-green-400">{rec.impact}</span>
@@ -225,7 +222,7 @@ export function WeeklyAdvisor() {
       {/* Weekly Goals Progress */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <GlassPanel>
-          <h3 className="text-white mb-4">Weekly Goals Progress</h3>
+          <h3 className="text-foreground mb-4">Weekly Goals Progress</h3>
           <div className="space-y-4">
             {weeklyGoals.map((goal, index) => (
               <motion.div
@@ -239,11 +236,11 @@ export function WeeklyAdvisor() {
                     {goal.status === 'complete' ? (
                       <CheckCircle className="w-5 h-5 text-green-400" />
                     ) : (
-                      <Clock className="w-5 h-5 text-[#CFAF5A]" />
+                      <Clock className="w-5 h-5 text-secondary" />
                     )}
-                    <span className="text-white">{goal.goal}</span>
+                    <span className="text-foreground">{goal.goal}</span>
                   </div>
-                  <span className="text-[#CFAF5A]">{goal.progress}%</span>
+                  <span className="text-secondary">{goal.progress}%</span>
                 </div>
                 <Progress value={goal.progress} className="h-2 bg-white/10" />
               </motion.div>
@@ -253,7 +250,7 @@ export function WeeklyAdvisor() {
 
         {/* Achievements */}
         <GlassPanel glow="gold">
-          <h3 className="text-white mb-4">🏆 This Week's Achievements</h3>
+          <h3 className="text-foreground mb-4">🏆 This Week's Achievements</h3>
           <div className="space-y-3">
             {achievements.map((achievement, index) => (
               <motion.div
@@ -268,8 +265,8 @@ export function WeeklyAdvisor() {
                   <span className="text-2xl">{achievement.icon}</span>
                 </div>
                 <div>
-                  <h4 className="text-white">{achievement.title}</h4>
-                  <p className="text-white/60">{achievement.description}</p>
+                  <h4 className="text-foreground">{achievement.title}</h4>
+                  <p className="text-foreground/60">{achievement.description}</p>
                 </div>
               </motion.div>
             ))}
@@ -279,7 +276,7 @@ export function WeeklyAdvisor() {
 
       {/* Next Week Preview */}
       <GlassPanel>
-        <h3 className="text-white mb-4">📅 Next Week's Study Plan</h3>
+        <h3 className="text-foreground mb-4">📅 Next Week's Study Plan</h3>
         <div className="space-y-3">
           {upcomingWeek.map((day, index) => (
             <motion.div
@@ -294,24 +291,24 @@ export function WeeklyAdvisor() {
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-1">
-                    <span className="text-[#CFAF5A]">{day.day}</span>
+                    <span className="text-secondary">{day.day}</span>
                     <Badge
                       variant="outline"
                       className={
                         day.priority === 'high'
                           ? 'border-red-400 text-red-400'
                           : day.priority === 'medium'
-                          ? 'border-[#CFAF5A] text-[#CFAF5A]'
-                          : 'border-white/40 text-white/40'
+                          ? 'border-[#CFAF5A] text-secondary'
+                          : 'border-white/40 text-foreground/40'
                       }
                     >
                       {day.priority}
                     </Badge>
                   </div>
-                  <p className="text-white">{day.focus}</p>
+                  <p className="text-foreground">{day.focus}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-white">{day.hours} hrs</p>
+                  <p className="text-foreground">{day.hours} hrs</p>
                 </div>
               </div>
             </motion.div>
@@ -328,18 +325,18 @@ export function WeeklyAdvisor() {
         <GlassPanel glow="maroon" className="gradient-maroon">
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 rounded-xl bg-[#CFAF5A] flex items-center justify-center flex-shrink-0">
-              <Sparkles className="w-6 h-6 text-[#500000]" />
+              <RevLogo size="md" className="text-primary" />
             </div>
             <div className="flex-1">
-              <h3 className="text-white mb-3">Rev's Overall Assessment</h3>
-              <p className="text-white/90 mb-4">
+              <h3 className="text-foreground mb-3">Rev's Overall Assessment</h3>
+              <p className="text-foreground/90 mb-4">
                 Outstanding week, Aggie! You're maintaining an 87% productivity score and staying on track with your goals. 
                 Your study habits are strong, but I've noticed you're most productive in the morning - let's optimize your 
                 schedule to capitalize on that. Keep up the momentum, and you'll ace that MATH 308 exam!
               </p>
               <div className="flex flex-wrap gap-2">
                 <Badge className="bg-green-500/20 text-green-400">On Track for 4.0</Badge>
-                <Badge className="bg-[#CFAF5A]/20 text-[#CFAF5A]">Strong Habits</Badge>
+                <Badge className="bg-[#CFAF5A]/20 text-secondary">Strong Habits</Badge>
                 <Badge className="bg-blue-500/20 text-blue-400">Ahead of Schedule</Badge>
               </div>
             </div>
