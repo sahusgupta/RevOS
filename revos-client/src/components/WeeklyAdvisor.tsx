@@ -1,348 +1,480 @@
-import { GlassPanel } from './GlassPanel';
-import { Badge } from './ui/badge';
-import { Progress } from './ui/progress';
-import { TrendingUp, Target, Brain, Clock, Award, CheckCircle } from 'lucide-react';
-import { RevLogo } from './RevLogo';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import {
+  Calendar,
+  CheckCircle,
+  AlertCircle,
+  Clock,
+  BookOpen,
+  Target,
+  TrendingUp,
+  Loader2,
+  Zap,
+  Award,
+} from 'lucide-react';
+import { GlassPanel } from './GlassPanel';
+import { Button } from './ui/button';
 
-export function WeeklyAdvisor() {
-  const weekSummary = {
-    productivityScore: 87,
-    studyHours: 18.5,
-    assignmentsCompleted: 7,
-    goalsAchieved: 5,
-    streak: 12,
+interface Assignment {
+  course: string;
+  title: string;
+  date: string;
+  type: string;
+  priority: 'high' | 'medium' | 'low';
+}
+
+interface CalendarEvent {
+  title: string;
+  start: string;
+  end?: string;
+  description?: string;
+  busy?: boolean;
+}
+
+interface WeeklyData {
+  weekStart: string;
+  weekEnd: string;
+  assignments: Assignment[];
+  calendarEvents: CalendarEvent[];
+  weeklyReview: string;
+  courseCount: number;
+  assignmentCount: number;
+  eventCount: number;
+}
+
+interface WeeklyAdvisorProps {
+  authToken?: string;
+  apiBaseUrl?: string;
+}
+
+export function WeeklyAdvisor({ authToken, apiBaseUrl = 'http://localhost:5000' }: WeeklyAdvisorProps) {
+  const [weeklyData, setWeeklyData] = useState<WeeklyData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [carouselIndex, setCarouselIndex] = useState(0);
+
+  useEffect(() => {
+    if (authToken) {
+      fetchWeeklyData();
+    }
+  }, [authToken]);
+
+  const fetchWeeklyData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const response = await fetch(`${apiBaseUrl}/api/weekly-advisor`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch weekly data');
+      }
+
+      const data = await response.json();
+      setWeeklyData(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load weekly advisor');
+      console.error('Error fetching weekly data:', err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const recommendations = [
-    {
-      icon: Brain,
-      title: 'Optimize Study Schedule',
-      description: 'Your peak productivity is between 9 AM - 12 PM. Schedule CSCE 314 work during these hours.',
-      priority: 'high',
-      impact: '+15% efficiency'
-    },
-    {
-      icon: Clock,
-      title: 'Time Management',
-      description: 'You spent 3.5 hours on social media this week. Consider using the Pomodoro technique.',
-      priority: 'medium',
-      impact: 'Save 2+ hours/week'
-    },
-    {
-      icon: Target,
-      title: 'Upcoming Deadlines',
-      description: 'MATH 308 exam in 7 days. Start reviewing Chapter 5-7 this weekend.',
-      priority: 'high',
-      impact: 'Avoid cramming'
-    },
-    {
-      icon: Award,
-      title: 'Budget Opportunity',
-      description: 'You can save $75/month by meal prepping. Here\'s a custom plan based on your preferences.',
-      priority: 'low',
-      impact: '$900/year savings'
-    },
-  ];
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
 
-  const weeklyGoals = [
-    { goal: 'Complete all assignments on time', progress: 100, status: 'complete' },
-    { goal: 'Study 20 hours', progress: 92.5, status: 'in-progress' },
-    { goal: 'Stay under budget', progress: 65, status: 'in-progress' },
-    { goal: 'Exercise 3 times', progress: 66, status: 'in-progress' },
-  ];
+  const formatDateLong = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
 
-  const achievements = [
-    { title: '7-Day Streak', description: 'Completed all tasks for a week', icon: '🔥' },
-    { title: 'Budget Master', description: 'Stayed under budget', icon: '💰' },
-    { title: 'Early Bird', description: 'Submitted 3 assignments early', icon: '🎯' },
-  ];
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high':
+        return { bg: 'bg-red-500/10', text: 'text-red-400', badge: 'bg-red-500/20 text-red-300' };
+      case 'medium':
+        return { bg: 'bg-yellow-500/10', text: 'text-yellow-400', badge: 'bg-yellow-500/20 text-yellow-300' };
+      case 'low':
+        return { bg: 'bg-green-500/10', text: 'text-green-400', badge: 'bg-green-500/20 text-green-300' };
+      default:
+        return { bg: 'bg-gray-500/10', text: 'text-gray-400', badge: 'bg-gray-500/20 text-gray-300' };
+    }
+  };
 
-  const upcomingWeek = [
-    { day: 'Monday', focus: 'CSCE 314 - Haskell Functions', hours: 3, priority: 'high' },
-    { day: 'Tuesday', focus: 'MATH 308 - Linear Algebra Review', hours: 2.5, priority: 'high' },
-    { day: 'Wednesday', focus: 'ENGR 216 - Lab Prep', hours: 2, priority: 'medium' },
-    { day: 'Thursday', focus: 'CSCE 314 - Assignment 4', hours: 4, priority: 'high' },
-    { day: 'Friday', focus: 'Review Week & Catch Up', hours: 2, priority: 'low' },
-  ];
+  const getWorkloadEmoji = (count: number) => {
+    if (count > 5) return '🔥';
+    if (count > 2) return '⚡';
+    return '✨';
+  };
+
+  const parseReviewSections = (review: string) => {
+    const slides = [];
+    const parts = review.split(/^## /m);
+    
+    for (const part of parts) {
+      if (!part.trim()) continue;
+      
+      const lines = part.split('\n');
+      const title = lines[0].trim();
+      const content = lines.slice(1).join('\n').trim();
+      
+      let emoji = '📋';
+      if (title.includes('Overview')) emoji = '📊';
+      else if (title.includes('Priority')) emoji = '🎯';
+      else if (title.includes('Time')) emoji = '⏰';
+      else if (title.includes('Study')) emoji = '📚';
+      else if (title.includes('Risk')) emoji = '⚠️';
+      else if (title.includes('Motivation') || title.includes('Encouragement')) emoji = '💪';
+      
+      // Split content into bullet points for better readability
+      const items = content
+        .split('\n')
+        .filter(line => line.trim())
+        .slice(0, 3); // Limit to 3 items per slide
+      
+      if (items.length > 0) {
+        slides.push({ title, emoji, items, fullContent: content });
+      }
+    }
+    
+    return slides;
+  };
+
+  const reviewSlides = weeklyData ? parseReviewSections(weeklyData.weeklyReview) : [];
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity }}>
+          <Loader2 className="w-10 h-10 text-secondary" />
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <GlassPanel className="p-8 border-red-600/30 rounded-2xl">
+        <div className="flex items-start gap-4">
+          <AlertCircle className="w-6 h-6 text-red-500 mt-1 flex-shrink-0" />
+          <div>
+            <h3 className="text-foreground font-bold text-lg mb-2">Error Loading Weekly Advisor</h3>
+            <p className="text-foreground/60 mb-4">{error}</p>
+            <Button
+              onClick={fetchWeeklyData}
+              className="bg-[#500000] hover:bg-[#8B0000]"
+            >
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </GlassPanel>
+    );
+  }
+
+  if (!weeklyData) {
+    return null;
+  }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="space-y-8 pb-8">
+      {/* Hero Header */}
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center gap-4"
+        transition={{ duration: 0.6 }}
+        className="relative overflow-hidden"
       >
-        <div className="w-16 h-16 rounded-2xl gradient-maroon glow-maroon flex items-center justify-center p-2">
-          <RevLogo size="xl" className="text-secondary" />
-        </div>
-        <div>
-          <h1 className="text-foreground mb-1">Weekly Advisor Report</h1>
-          <p className="text-foreground/60">Week of October 14-18, 2025 • Personalized insights from Rev</p>
+        <div className="relative z-10">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-4xl font-bold text-foreground mb-2">📋 Weekly Planner</h1>
+              <p className="text-foreground/60 text-lg">
+                {formatDateLong(weeklyData.weekStart)} → {formatDateLong(weeklyData.weekEnd)}
+              </p>
+            </div>
+            <Button
+              onClick={fetchWeeklyData}
+              disabled={isLoading}
+              className="bg-[#500000] hover:bg-[#8B0000] rounded-xl px-6 py-2"
+            >
+              🔄 Refresh
+            </Button>
+          </div>
         </div>
       </motion.div>
 
-      {/* Performance Summary */}
-      <GlassPanel glow="maroon" className="gradient-maroon">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-foreground">This Week's Performance</h2>
-          <Badge className="bg-[#CFAF5A] text-[#500000]">
-            Week 8 of 16
-          </Badge>
-        </div>
-        
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.1 }}
-            className="text-center p-4 rounded-xl glass-card"
-          >
-            <motion.div
-              animate={{ scale: [1, 1.1, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="w-12 h-12 mx-auto mb-2 rounded-xl bg-[#CFAF5A] flex items-center justify-center"
-            >
-              <TrendingUp className="w-6 h-6 text-[#500000]" />
-            </motion.div>
-            <h3 className="text-foreground">{weekSummary.productivityScore}</h3>
-            <p className="text-foreground/60">Score</p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2 }}
-            className="text-center p-4 rounded-xl glass-card"
-          >
-            <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-white/10 flex items-center justify-center">
-              <Clock className="w-6 h-6 text-secondary" />
-            </div>
-            <h3 className="text-foreground">{weekSummary.studyHours}</h3>
-            <p className="text-foreground/60">Hours</p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3 }}
-            className="text-center p-4 rounded-xl glass-card"
-          >
-            <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-white/10 flex items-center justify-center">
-              <CheckCircle className="w-6 h-6 text-secondary" />
-            </div>
-            <h3 className="text-foreground">{weekSummary.assignmentsCompleted}</h3>
-            <p className="text-foreground/60">Tasks</p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.4 }}
-            className="text-center p-4 rounded-xl glass-card"
-          >
-            <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-white/10 flex items-center justify-center">
-              <Target className="w-6 h-6 text-secondary" />
-            </div>
-            <h3 className="text-foreground">{weekSummary.goalsAchieved}</h3>
-            <p className="text-foreground/60">Goals</p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.5 }}
-            className="text-center p-4 rounded-xl glass-card"
-          >
-            <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-white/10 flex items-center justify-center text-secondary">
-              🔥
-            </div>
-            <h3 className="text-foreground">{weekSummary.streak}</h3>
-            <p className="text-foreground/60">Day Streak</p>
-          </motion.div>
-        </div>
-      </GlassPanel>
-
-      {/* AI Recommendations */}
-      <div>
-        <h2 className="text-foreground mb-4">Rev's Recommendations</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {recommendations.map((rec, index) => {
-            const Icon = rec.icon;
-            return (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 + index * 0.1 }}
-                whileHover={{ scale: 1.02 }}
-              >
-                <GlassPanel
-                  glow={rec.priority === 'high' ? 'gold' : 'none'}
-                  className={rec.priority === 'high' ? 'border-l-4 border-[#CFAF5A]' : ''}
-                >
-                  <div className="flex items-start gap-4">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                      rec.priority === 'high' 
-                        ? 'gradient-maroon glow-maroon' 
-                        : 'bg-white/10'
-                    }`}>
-                      <Icon className="w-6 h-6 text-secondary" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="text-foreground">{rec.title}</h3>
-                        <Badge
-                          className={
-                            rec.priority === 'high'
-                              ? 'bg-red-500/20 text-red-400'
-                              : rec.priority === 'medium'
-                              ? 'bg-[#CFAF5A]/20 text-secondary'
-                              : 'bg-blue-500/20 text-blue-400'
-                          }
-                        >
-                          {rec.priority}
-                        </Badge>
-                      </div>
-                      <p className="text-foreground/70 mb-2">{rec.description}</p>
-                      <div className="flex items-center gap-2">
-                        <TrendingUp className="w-4 h-4 text-green-400" />
-                        <span className="text-green-400">{rec.impact}</span>
-                      </div>
-                    </div>
-                  </div>
-                </GlassPanel>
-              </motion.div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Weekly Goals Progress */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <GlassPanel>
-          <h3 className="text-foreground mb-4">Weekly Goals Progress</h3>
-          <div className="space-y-4">
-            {weeklyGoals.map((goal, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 1 + index * 0.1 }}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    {goal.status === 'complete' ? (
-                      <CheckCircle className="w-5 h-5 text-green-400" />
-                    ) : (
-                      <Clock className="w-5 h-5 text-secondary" />
-                    )}
-                    <span className="text-foreground">{goal.goal}</span>
-                  </div>
-                  <span className="text-secondary">{goal.progress}%</span>
-                </div>
-                <Progress value={goal.progress} className="h-2 bg-white/10" />
-              </motion.div>
-            ))}
-          </div>
-        </GlassPanel>
-
-        {/* Achievements */}
-        <GlassPanel glow="gold">
-          <h3 className="text-foreground mb-4">🏆 This Week's Achievements</h3>
-          <div className="space-y-3">
-            {achievements.map((achievement, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 1.4 + index * 0.1 }}
-                whileHover={{ scale: 1.05 }}
-                className="flex items-center gap-4 p-3 rounded-xl glass-card cursor-pointer"
-              >
-                <div className="w-12 h-12 rounded-xl gradient-maroon glow-maroon flex items-center justify-center">
-                  <span className="text-2xl">{achievement.icon}</span>
-                </div>
-                <div>
-                  <h4 className="text-foreground">{achievement.title}</h4>
-                  <p className="text-foreground/60">{achievement.description}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </GlassPanel>
-      </div>
-
-      {/* Next Week Preview */}
-      <GlassPanel>
-        <h3 className="text-foreground mb-4">📅 Next Week's Study Plan</h3>
-        <div className="space-y-3">
-          {upcomingWeek.map((day, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 1.7 + index * 0.1 }}
-              className={`p-4 rounded-xl glass-card ${
-                day.priority === 'high' ? 'border-l-4 border-[#CFAF5A]' : ''
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-1">
-                    <span className="text-secondary">{day.day}</span>
-                    <Badge
-                      variant="outline"
-                      className={
-                        day.priority === 'high'
-                          ? 'border-red-400 text-red-400'
-                          : day.priority === 'medium'
-                          ? 'border-[#CFAF5A] text-secondary'
-                          : 'border-white/40 text-foreground/40'
-                      }
-                    >
-                      {day.priority}
-                    </Badge>
-                  </div>
-                  <p className="text-foreground">{day.focus}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-foreground">{day.hours} hrs</p>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </GlassPanel>
-
-      {/* Overall Summary */}
+      {/* Stats Grid */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 2.2 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
       >
-        <GlassPanel glow="maroon" className="gradient-maroon">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl bg-[#CFAF5A] flex items-center justify-center flex-shrink-0">
-              <RevLogo size="md" className="text-primary" />
+        {/* Courses Card */}
+        <motion.div
+          whileHover={{ translateY: -4 }}
+          transition={{ type: 'spring', stiffness: 300 }}
+        >
+          <GlassPanel className="p-5 rounded-2xl border-l-4 border-[#CFAF5A] hover:border-[#500000] transition-colors">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-foreground/60 text-sm font-medium">📚 Courses</p>
+                <p className="text-3xl font-bold text-[#CFAF5A] mt-2">{weeklyData.courseCount}</p>
+              </div>
+              <BookOpen className="w-10 h-10 text-[#CFAF5A]/40" />
             </div>
-            <div className="flex-1">
-              <h3 className="text-foreground mb-3">Rev's Overall Assessment</h3>
-              <p className="text-foreground/90 mb-4">
-                Outstanding week, Aggie! You're maintaining an 87% productivity score and staying on track with your goals. 
-                Your study habits are strong, but I've noticed you're most productive in the morning - let's optimize your 
-                schedule to capitalize on that. Keep up the momentum, and you'll ace that MATH 308 exam!
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <Badge className="bg-green-500/20 text-green-400">On Track for 4.0</Badge>
-                <Badge className="bg-[#CFAF5A]/20 text-secondary">Strong Habits</Badge>
-                <Badge className="bg-blue-500/20 text-blue-400">Ahead of Schedule</Badge>
+          </GlassPanel>
+        </motion.div>
+
+        {/* Assignments Card */}
+        <motion.div
+          whileHover={{ translateY: -4 }}
+          transition={{ type: 'spring', stiffness: 300, delay: 0.05 }}
+        >
+          <GlassPanel className="p-5 rounded-2xl border-l-4 border-green-500 hover:border-[#500000] transition-colors">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-foreground/60 text-sm font-medium">✅ Assignments</p>
+                <p className="text-3xl font-bold text-green-400 mt-2">{weeklyData.assignmentCount}</p>
+              </div>
+              <CheckCircle className="w-10 h-10 text-green-500/40" />
+            </div>
+          </GlassPanel>
+        </motion.div>
+
+        {/* Events Card */}
+        <motion.div
+          whileHover={{ translateY: -4 }}
+          transition={{ type: 'spring', stiffness: 300, delay: 0.1 }}
+        >
+          <GlassPanel className="p-5 rounded-2xl border-l-4 border-blue-500 hover:border-[#500000] transition-colors">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-foreground/60 text-sm font-medium">📅 Events</p>
+                <p className="text-3xl font-bold text-blue-400 mt-2">{weeklyData.eventCount}</p>
+              </div>
+              <Calendar className="w-10 h-10 text-blue-500/40" />
+            </div>
+          </GlassPanel>
+        </motion.div>
+
+        {/* Workload Card */}
+        <motion.div
+          whileHover={{ translateY: -4 }}
+          transition={{ type: 'spring', stiffness: 300, delay: 0.15 }}
+        >
+          <GlassPanel className="p-5 rounded-2xl border-l-4 border-purple-500 hover:border-[#500000] transition-colors">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-foreground/60 text-sm font-medium">⚡ Workload</p>
+                <p className="text-2xl font-bold text-purple-400 mt-2">
+                  {getWorkloadEmoji(weeklyData.assignmentCount)} {' '}
+                  {weeklyData.assignmentCount > 5 ? 'Heavy' : weeklyData.assignmentCount > 2 ? 'Medium' : 'Light'}
+                </p>
+              </div>
+              <Zap className="w-10 h-10 text-purple-500/40" />
+            </div>
+          </GlassPanel>
+        </motion.div>
+      </motion.div>
+
+      {/* Assignments Section */}
+      {weeklyData.assignments.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <GlassPanel className="p-8 rounded-2xl border-t-2 border-[#500000]">
+            <h2 className="text-2xl font-bold text-foreground mb-2 flex items-center gap-3">
+              <Target className="w-6 h-6 text-[#500000]" />
+              This Week's Tasks
+            </h2>
+            <p className="text-foreground/60 text-sm mb-6">Manage your deadlines with priority tracking</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {weeklyData.assignments.map((assignment, idx) => {
+                const colors = getPriorityColor(assignment.priority);
+                return (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.1 }}
+                    whileHover={{ scale: 1.02 }}
+                    className={`p-5 rounded-xl border border-[#500000]/20 ${colors.bg} hover:border-[#500000]/40 transition-all cursor-pointer`}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <h3 className="text-foreground font-semibold mb-2">{assignment.title}</h3>
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-xs px-3 py-1 rounded-full bg-[#500000]/20 text-[#CFAF5A]">
+                            {assignment.course}
+                          </span>
+                          <span className={`text-xs px-3 py-1 rounded-full font-semibold ${colors.badge}`}>
+                            {assignment.priority.toUpperCase()}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1 text-foreground/70 text-sm">
+                          <Clock className="w-4 h-4" />
+                          {formatDate(assignment.date)}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </GlassPanel>
+        </motion.div>
+      )}
+
+      {/* Weekly Review Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
+      >
+        <GlassPanel className="p-8 rounded-2xl border-t-2 border-[#CFAF5A]">
+          <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-3">
+            <Award className="w-6 h-6 text-[#CFAF5A]" />
+            Rev's Weekly Assessment
+          </h2>
+          
+          {reviewSlides.length > 0 ? (
+            <div className="space-y-4">
+              {/* Carousel Container */}
+              <div className="relative">
+                <motion.div
+                  key={carouselIndex}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="bg-gradient-to-br from-[#500000]/5 to-[#CFAF5A]/5 rounded-xl border border-[#CFAF5A]/40 p-6 min-h-[280px] max-h-[320px] flex flex-col justify-between"
+                >
+                  {/* Section Header */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-4">
+                      <span className="text-2xl">{reviewSlides[carouselIndex].emoji}</span>
+                      <h3 className="text-lg font-bold text-[#CFAF5A]">
+                        {reviewSlides[carouselIndex].title}
+                      </h3>
+                    </div>
+
+                    {/* Section Content - Compact */}
+                    <div className="space-y-2">
+                      {reviewSlides[carouselIndex].items.map((item, idx) => (
+                        <div key={idx} className="flex gap-2 text-xs md:text-sm text-foreground/90">
+                          <span className="text-[#CFAF5A] font-bold flex-shrink-0">•</span>
+                          <span className="line-clamp-2">{item}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+
+              {/* Carousel Navigation */}
+              <div className="flex items-center justify-between mt-6">
+                <button
+                  onClick={() => setCarouselIndex((prev) => (prev === 0 ? reviewSlides.length - 1 : prev - 1))}
+                  className="p-2 rounded-lg bg-[#CFAF5A]/20 hover:bg-[#CFAF5A]/40 text-[#CFAF5A] transition-all font-bold text-lg"
+                >
+                  ←
+                </button>
+
+                {/* Progress Dots */}
+                <div className="flex items-center gap-2">
+                  {reviewSlides.map((_, idx) => (
+                    <motion.button
+                      key={idx}
+                      onClick={() => setCarouselIndex(idx)}
+                      className={`h-2 rounded-full transition-all ${
+                        idx === carouselIndex
+                          ? 'w-8 bg-[#CFAF5A]'
+                          : 'w-2 bg-[#CFAF5A]/40 hover:bg-[#CFAF5A]/60'
+                      }`}
+                      whileHover={{ scale: 1.2 }}
+                    />
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => setCarouselIndex((prev) => (prev === reviewSlides.length - 1 ? 0 : prev + 1))}
+                  className="p-2 rounded-lg bg-[#CFAF5A]/20 hover:bg-[#CFAF5A]/40 text-[#CFAF5A] transition-all font-bold text-lg"
+                >
+                  →
+                </button>
+              </div>
+
+              {/* Section Counter */}
+              <div className="text-center text-foreground/60 text-sm">
+                Section {carouselIndex + 1} of {reviewSlides.length}
               </div>
             </div>
-          </div>
+          ) : (
+            <p className="text-foreground/60">Loading assessment...</p>
+          )}
         </GlassPanel>
       </motion.div>
+
+      {/* Calendar Events Section */}
+      {weeklyData.calendarEvents.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+        >
+          <GlassPanel className="p-8 rounded-2xl border-t-2 border-blue-500">
+            <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-3">
+              <Calendar className="w-6 h-6 text-blue-500" />
+              Scheduled Events
+            </h2>
+            <div className="space-y-3">
+              {weeklyData.calendarEvents.map((event, idx) => (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.05 }}
+                  whileHover={{ scale: 1.01 }}
+                  className="flex items-start gap-4 p-4 rounded-xl bg-blue-500/5 border border-blue-500/20 hover:border-blue-500/40 transition-colors"
+                >
+                  <div className="flex-shrink-0 pt-1">
+                    <Calendar className="w-5 h-5 text-blue-500" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-foreground font-semibold">{event.title}</p>
+                    {event.description && (
+                      <p className="text-foreground/60 text-sm mt-1">{event.description}</p>
+                    )}
+                    <p className="text-foreground/50 text-xs mt-2">{formatDate(event.start)}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </GlassPanel>
+        </motion.div>
+      )}
     </div>
   );
 }

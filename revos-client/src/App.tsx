@@ -35,17 +35,63 @@ function App() {
     const token = localStorage.getItem('authToken');
     const userData = localStorage.getItem('user');
     
+    console.log('🔍 App mount - Checking for existing session...');
+    console.log('🔍 App mount - Token exists:', !!token, token ? `${token.substring(0, 20)}...` : 'NONE');
+    console.log('🔍 App mount - User data exists:', !!userData);
+    
     if (token && userData) {
       try {
         setAuthToken(token);
         setUser(JSON.parse(userData));
+        console.log('✅ Session restored from localStorage');
       } catch (e) {
         console.error('Failed to restore session:', e);
         localStorage.removeItem('authToken');
         localStorage.removeItem('user');
       }
+    } else {
+      console.log('⚠️ No session found in localStorage');
     }
   }, []);
+
+  // Handle Google Calendar OAuth callback
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    const state = params.get('state');
+    
+    if (code && authToken) {
+      console.log('🗓️ Google Calendar OAuth callback detected, exchanging code for tokens...');
+      
+      // Exchange code for tokens on backend
+      fetch(`${API_BASE_URL}/api/google-calendar/callback`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ code })
+      })
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`Server returned ${res.status}`);
+        }
+        return res.json();
+      })
+      .then(data => {
+        console.log('✅ Google Calendar connected successfully!', data);
+        // Clear the URL parameters
+        window.history.replaceState({}, document.title, window.location.pathname);
+        // Navigate back to settings
+        setCurrentView('settings');
+      })
+      .catch(err => {
+        console.error('❌ Calendar callback error:', err);
+        // Clear the URL parameters even on error
+        window.history.replaceState({}, document.title, window.location.pathname);
+      });
+    }
+  }, [authToken, API_BASE_URL]);
 
   const handleAuthSuccess = (token: string, userData: User) => {
     setAuthToken(token);
@@ -95,17 +141,17 @@ function App() {
 
     switch (currentView) {
       case 'dashboard':
-        return <Dashboard />;
+        return authToken ? <Dashboard authToken={authToken} apiBaseUrl={API_BASE_URL} /> : <Dashboard />;
       case 'ask-rev':
         return authToken ? <AskRev authToken={authToken} /> : null;
       case 'syllabus':
         return authToken ? <SyllabusUpload authToken={authToken} /> : null;
       case 'budget':
-        return authToken ? <BudgetAnalytics /> : null;
+        return authToken ? <BudgetAnalytics authToken={authToken} userId={user?.id.toString() || ''} /> : null;
       case 'advisor':
-        return authToken ? <WeeklyAdvisor /> : null;
+        return authToken ? <WeeklyAdvisor authToken={authToken} apiBaseUrl={API_BASE_URL} /> : null;
       case 'settings':
-        return authToken ? <Settings /> : null;
+        return authToken ? <Settings authToken={authToken} apiBaseUrl={API_BASE_URL} /> : null;
       case 'courses':
         return authToken ? (
           <SyllabusManager
@@ -115,7 +161,7 @@ function App() {
           />
         ) : null;
       default:
-        return <Dashboard />;
+        return authToken ? <Dashboard authToken={authToken} apiBaseUrl={API_BASE_URL} /> : <Dashboard />;
     }
   };
 

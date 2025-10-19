@@ -28,6 +28,7 @@ interface SyllabusData {
     weight: number;
   }>;
   raw_text?: string;
+  id?: number; // Added: Syllabus ID from database
 }
 
 interface SyllabusUploadProps {
@@ -47,6 +48,11 @@ export function SyllabusUpload({ authToken, apiBaseUrl = 'http://localhost:5000'
   const [topicDescriptions, setTopicDescriptions] = useState<{ [key: string]: string }>({});
   const [loadingTopics, setLoadingTopics] = useState<string[]>([]);
   const [hoveredTopic, setHoveredTopic] = useState<string | null>(null);
+  const [editingGrade, setEditingGrade] = useState<number | null>(null);
+  const [editingGradeValues, setEditingGradeValues] = useState<{ category: string; weight: number } | null>(null);
+  const [newGradeCategory, setNewGradeCategory] = useState('');
+  const [newGradeWeight, setNewGradeWeight] = useState('');
+  const [syllabusId, setSyllabusId] = useState<string | null>(null);
 
   // API utility functions
   const uploadTextToAPI = async (rawText: string): Promise<SyllabusData> => {
@@ -251,8 +257,8 @@ export function SyllabusUpload({ authToken, apiBaseUrl = 'http://localhost:5000'
 
   const handleFileUpload = async (file?: File) => {
     try {
-      setStage('processing');
-      setProgress(0);
+    setStage('processing');
+    setProgress(0);
       setError(null);
 
       const fileToProcess = file || uploadedFile;
@@ -284,17 +290,18 @@ export function SyllabusUpload({ authToken, apiBaseUrl = 'http://localhost:5000'
       setParsedData(result);
       setUploadedFile(null);
       setSyllabusText('');
+      setSyllabusId(result.id ? String(result.id) : null); // Capture syllabusId from API response
       
       // Clear file input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
       
-      setTimeout(() => setStage('complete'), 500);
+          setTimeout(() => setStage('complete'), 500);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred while processing the file');
       setStage('error');
-    }
+        }
   };
 
   const handleTextUpload = async () => {
@@ -303,8 +310,8 @@ export function SyllabusUpload({ authToken, apiBaseUrl = 'http://localhost:5000'
     }
 
     try {
-      setStage('processing');
-      setProgress(0);
+    setStage('processing');
+    setProgress(0);
       setError(null);
 
       const progressInterval = setInterval(() => {
@@ -318,13 +325,14 @@ export function SyllabusUpload({ authToken, apiBaseUrl = 'http://localhost:5000'
       setParsedData(result);
       setUploadedFile(null);
       setSyllabusText('');
+      setSyllabusId(result.id ? String(result.id) : null); // Capture syllabusId from API response
       
       // Clear file input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
       
-      setTimeout(() => setStage('complete'), 500);
+          setTimeout(() => setStage('complete'), 500);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred while processing the text');
       setStage('error');
@@ -336,6 +344,89 @@ export function SyllabusUpload({ authToken, apiBaseUrl = 'http://localhost:5000'
     if (file) {
       setUploadedFile(file);
       handleFileUpload(file);
+    }
+  };
+
+  const handleEditGrade = (index: number, grade: any) => {
+    setEditingGrade(index);
+    setEditingGradeValues({ ...grade });
+  };
+
+  const handleSaveGrade = async (index: number) => {
+    if (!editingGradeValues || !editingGradeValues.category || editingGradeValues.weight < 0) {
+      alert('Please fill in all fields with valid values');
+      return;
+    }
+
+    const updatedGrading = [...parsedData?.gradingBreakdown || []];
+    updatedGrading[index] = editingGradeValues;
+    setParsedData(prev => prev ? { ...prev, gradingBreakdown: updatedGrading } : null);
+    setEditingGrade(null);
+    setEditingGradeValues(null);
+  };
+
+  const handleDeleteGrade = (index: number) => {
+    // eslint-disable-next-line no-alert
+    if (window.confirm('Delete this grading category?')) {
+      const updatedGrading = parsedData?.gradingBreakdown.filter((_, i) => i !== index) || [];
+      setParsedData(prev => prev ? { ...prev, gradingBreakdown: updatedGrading } : null);
+    }
+  };
+
+  const handleAddGrade = () => {
+    if (!newGradeCategory.trim() || !newGradeWeight || isNaN(parseFloat(newGradeWeight))) {
+      alert('Please enter a valid category name and weight');
+      return;
+    }
+
+    const weight = parseFloat(newGradeWeight);
+    if (weight < 0 || weight > 100) {
+      alert('Weight must be between 0 and 100');
+      return;
+    }
+
+    setParsedData(prev => prev ? {
+      ...prev,
+      gradingBreakdown: [
+        ...prev.gradingBreakdown,
+        { category: newGradeCategory, weight }
+      ]
+    } : null);
+
+    setNewGradeCategory('');
+    setNewGradeWeight('');
+  };
+
+  const saveGradingBreakdown = async () => {
+    if (!syllabusId) {
+      alert('Please upload a syllabus first');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/syllabus/${syllabusId}/grading`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          gradingBreakdown: parsedData?.gradingBreakdown || []
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        alert(`Error: ${error.error}`);
+        return;
+      }
+
+      const result = await response.json();
+      alert('✅ Grading breakdown saved successfully!');
+      console.log('Saved grading breakdown:', result);
+    } catch (err) {
+      alert('Failed to save grading breakdown');
+      console.error('Error:', err);
     }
   };
 
@@ -698,28 +789,28 @@ Grading:
                     <h1 className="text-3xl font-bold text-secondary mb-2">{displayData.course}</h1>
                     <p className="text-foreground/80">{displayData.semester}</p>
                     <p className="text-foreground/60">Instructor: {displayData.instructor}</p>
-                  </div>
+                    </div>
                   <div className="text-right">
                     <div className="grid grid-cols-3 gap-4">
                       <div className="text-center">
                         <p className="text-3xl font-bold text-secondary">{displayData.exams || 0}</p>
                         <p className="text-foreground/60 text-sm">Exams</p>
-                      </div>
+                    </div>
                       <div className="text-center">
                         <p className="text-3xl font-bold text-secondary">{displayData.assignments || 0}</p>
                         <p className="text-foreground/60 text-sm">Assignments</p>
-                      </div>
+                    </div>
                       <div className="text-center">
                         <p className="text-3xl font-bold text-secondary">{displayData.projects || 0}</p>
                         <p className="text-foreground/60 text-sm">Projects</p>
-                      </div>
+                    </div>
+                    </div>
                     </div>
                   </div>
-                </div>
-              </GlassPanel>
+                </GlassPanel>
 
               {/* Timeline - Key Dates */}
-              <GlassPanel>
+                <GlassPanel>
                 <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
                   <Calendar className="w-6 h-6 text-secondary" />
                   Important Dates
@@ -728,11 +819,11 @@ Grading:
                   {displayData.keyDates.length > 0 ? (
                     <div className="relative">
                       {displayData.keyDates.map((item, index) => (
-                        <motion.div
-                          key={index}
+                      <motion.div
+                        key={index}
                           initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: index * 0.1 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.1 }}
                           className="flex gap-4 mb-6"
                         >
                           {/* Timeline Dot */}
@@ -758,7 +849,7 @@ Grading:
                                 <div>
                                   <h3 className="text-foreground font-semibold">{item.event}</h3>
                                   <p className="text-foreground/60 text-sm mt-1">{item.date}</p>
-                                </div>
+                        </div>
                                 <Badge className={
                                   item.type === 'exam' ? 'bg-red-500/20 text-red-300' :
                                   item.type === 'project' ? 'bg-[#CFAF5A]/20 text-secondary' :
@@ -768,21 +859,21 @@ Grading:
                                    item.type === 'project' ? '🎯 Project' :
                                    item.type === 'assignment' ? '✍️ Assignment' :
                                    '📅 Event'}
-                                </Badge>
+                        </Badge>
                               </div>
                             </div>
                           </div>
-                        </motion.div>
-                      ))}
+                      </motion.div>
+                    ))}
                     </div>
                   ) : (
                     <p className="text-foreground/60 text-center py-8">No key dates found in syllabus</p>
                   )}
-                </div>
-              </GlassPanel>
+                  </div>
+                </GlassPanel>
 
               {/* Topics - Concept Map */}
-              <GlassPanel>
+                <GlassPanel>
                 <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
                   <BookOpen className="w-6 h-6 text-secondary" />
                   Course Concepts
@@ -821,7 +912,7 @@ Grading:
                           {/* Tooltip with Description */}
                           <AnimatePresence>
                             {isHovered && (
-                              <motion.div
+                      <motion.div
                                 initial={{ opacity: 0, scale: 0.95, y: 5 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.95, y: 5 }}
@@ -846,7 +937,7 @@ Grading:
                                 ) : (
                                   <p className="text-[#CFAF5A]/70 text-sm">Unable to load description</p>
                                 )}
-                              </motion.div>
+                      </motion.div>
                             )}
                           </AnimatePresence>
                         </div>
@@ -856,10 +947,10 @@ Grading:
                 ) : (
                   <p className="text-foreground/60 text-center py-8">No topics found in syllabus</p>
                 )}
-              </GlassPanel>
+                </GlassPanel>
 
-              {/* Grading Breakdown - Visual Bars */}
-              <GlassPanel>
+              {/* Grading Breakdown - Visual Bars with Edit/Delete */}
+                <GlassPanel>
                 <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
                   <Target className="w-6 h-6 text-secondary" />
                   Grading Breakdown
@@ -872,26 +963,132 @@ Grading:
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.1 }}
+                        className="group"
                       >
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="text-foreground font-medium">{item.category}</span>
-                          <span className="text-secondary font-bold text-lg">{item.weight}%</span>
+                        {editingGrade === index ? (
+                          // Edit Mode
+                          <div className="space-y-3 p-4 bg-white/5 rounded-lg border border-secondary/30">
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                value={editingGradeValues?.category || ''}
+                                onChange={(e) => setEditingGradeValues(prev => prev ? { ...prev, category: e.target.value } : null)}
+                                placeholder="Category name"
+                                className="flex-1 px-3 py-2 rounded bg-white/10 text-foreground border border-white/20 focus:border-secondary focus:outline-none"
+                              />
+                              <input
+                                type="number"
+                                value={editingGradeValues?.weight || ''}
+                                onChange={(e) => setEditingGradeValues(prev => prev ? { ...prev, weight: parseFloat(e.target.value) || 0 } : null)}
+                                placeholder="Weight %"
+                                min="0"
+                                max="100"
+                                className="w-20 px-3 py-2 rounded bg-white/10 text-foreground border border-white/20 focus:border-secondary focus:outline-none"
+                              />
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleSaveGrade(index)}
+                                className="flex-1 px-3 py-2 rounded bg-green-600 hover:bg-green-700 text-white font-medium transition"
+                              >
+                                Save
+                              </button>
+                              <button
+                                onClick={() => setEditingGrade(null)}
+                                className="flex-1 px-3 py-2 rounded bg-gray-600 hover:bg-gray-700 text-white font-medium transition"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          // Display Mode
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-center">
+                              <span className="text-foreground font-medium">{item.category}</span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-secondary font-bold text-lg">{item.weight}%</span>
+                                <button
+                                  onClick={() => handleEditGrade(index, item)}
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity px-2 py-1 text-xs rounded bg-blue-600 hover:bg-blue-700 text-white"
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteGrade(index)}
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity px-2 py-1 text-xs rounded bg-red-600 hover:bg-red-700 text-white"
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            </div>
+                            <div className="h-3 rounded-full overflow-hidden bg-white/5 border border-white/10">
+                              <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${item.weight}%` }}
+                                transition={{ delay: index * 0.1 + 0.2, duration: 0.8, ease: "easeOut" }}
+                                className="h-full bg-gradient-to-r from-[#CFAF5A] to-red-500/50 rounded-full"
+                              />
+                            </div>
                         </div>
-                        <div className="h-3 rounded-full overflow-hidden bg-white/5 border border-white/10">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${item.weight}%` }}
-                            transition={{ delay: index * 0.1 + 0.2, duration: 0.8, ease: "easeOut" }}
-                            className="h-full bg-gradient-to-r from-[#CFAF5A] to-red-500/50 rounded-full"
-                          />
-                        </div>
+                        )}
                       </motion.div>
                     ))}
+                    
+                    {/* Add New Category */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-6 pt-6 border-t border-white/10 space-y-3"
+                    >
+                      <p className="text-foreground/60 text-sm font-medium">Add New Category</p>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={newGradeCategory}
+                          onChange={(e) => setNewGradeCategory(e.target.value)}
+                          placeholder="Category name"
+                          className="flex-1 px-3 py-2 rounded bg-white/10 text-foreground border border-white/20 focus:border-secondary focus:outline-none"
+                        />
+                        <input
+                          type="number"
+                          value={newGradeWeight}
+                          onChange={(e) => setNewGradeWeight(e.target.value)}
+                          placeholder="Weight %"
+                          min="0"
+                          max="100"
+                          className="w-24 px-3 py-2 rounded bg-white/10 text-foreground border border-white/20 focus:border-secondary focus:outline-none"
+                        />
+                        <button
+                          onClick={handleAddGrade}
+                          className="px-4 py-2 rounded bg-[#500000] hover:bg-[#8B0000] text-white font-medium transition"
+                        >
+                          Add
+                        </button>
+                      </div>
+                    </motion.div>
                   </div>
                 ) : (
                   <p className="text-foreground/60 text-center py-8">No grading information found</p>
                 )}
-              </GlassPanel>
+                
+                {/* Save Changes Button */}
+                {displayData.gradingBreakdown.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-6 pt-6 border-t border-white/10"
+                  >
+                    <button
+                      onClick={saveGradingBreakdown}
+                      className="w-full px-4 py-2 rounded-lg bg-[#500000] hover:bg-[#8B0000] text-white font-semibold transition flex items-center justify-center gap-2"
+                    >
+                      <CheckCircle className="w-5 h-5" />
+                      Save Grading Changes
+                    </button>
+                  </motion.div>
+                )}
+                </GlassPanel>
 
               {/* Action Buttons */}
               <div className="flex gap-4 justify-center">

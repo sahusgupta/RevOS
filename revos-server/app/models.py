@@ -14,6 +14,12 @@ class User(db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     
+    # Google Calendar integration
+    google_calendar_token = db.Column(db.Text, nullable=True)
+    google_calendar_refresh_token = db.Column(db.Text, nullable=True)
+    google_calendar_token_expiry = db.Column(db.DateTime, nullable=True)
+    selected_calendar_id = db.Column(db.String(255), nullable=True, default='primary')
+    
     # Relationship to syllabi
     syllabi = db.relationship('Syllabus', backref='user', lazy=True, cascade='all, delete-orphan')
     
@@ -30,7 +36,8 @@ class User(db.Model):
             'id': self.id,
             'username': self.username,
             'email': self.email,
-            'created_at': self.created_at.isoformat()
+            'created_at': self.created_at.isoformat(),
+            'google_calendar_connected': bool(self.google_calendar_token)
         }
 
 

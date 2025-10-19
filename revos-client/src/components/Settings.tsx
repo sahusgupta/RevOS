@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { GlassPanel } from './GlassPanel';
+import { GoogleCalendarAuth } from './GoogleCalendarAuth';
 import { Button } from './ui/button';
 import { Switch } from './ui/switch';
 import { Label } from './ui/label';
@@ -20,11 +21,18 @@ import { motion } from 'framer-motion';
 
 type Theme = 'light' | 'dark' | 'system';
 
-export function Settings() {
+interface SettingsProps {
+  authToken?: string;
+  apiBaseUrl?: string;
+}
+
+export function Settings({ authToken = '', apiBaseUrl = 'http://localhost:5000' }: SettingsProps) {
   const [theme, setTheme] = useState<Theme>(() => {
     const saved = localStorage.getItem('theme') as Theme;
     return saved || 'system';
   });
+  
+  const [googleCalendarConnected, setGoogleCalendarConnected] = useState(false);
 
   const [notifications, setNotifications] = useState(() => {
     const saved = localStorage.getItem('notifications');
@@ -44,6 +52,32 @@ export function Settings() {
       tips: true
     };
   });
+
+  // Load Google Calendar connection status
+  useEffect(() => {
+    if (authToken) {
+      loadGoogleCalendarStatus();
+    }
+  }, [authToken]);
+
+  const loadGoogleCalendarStatus = async () => {
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/user/status`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setGoogleCalendarConnected(data.user?.google_calendar_connected || false);
+      }
+    } catch (err) {
+      console.error('Failed to load Google Calendar status:', err);
+    }
+  };
 
   // Apply theme to document
   useEffect(() => {
@@ -241,26 +275,26 @@ export function Settings() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start border-border text-muted-foreground hover:border-secondary/50 hover:text-foreground"
-                  >
-                    <Globe className="w-4 h-4 mr-2" />
-                    Language & Region
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start border-border text-muted-foreground hover:border-secondary/50 hover:text-foreground"
-                  >
-                    <Shield className="w-4 h-4 mr-2" />
-                    Privacy Policy
-                  </Button>
-                </div>
               </div>
             </GlassPanel>
           </motion.div>
         </div>
+
+        {/* Google Calendar Integration - Full Width */}
+        {authToken && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <GoogleCalendarAuth
+              authToken={authToken}
+              isConnected={googleCalendarConnected}
+              apiBaseUrl={apiBaseUrl}
+              onConnected={() => setGoogleCalendarConnected(true)}
+            />
+          </motion.div>
+        )}
       </div>
     </div>
   );

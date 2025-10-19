@@ -1,0 +1,35 @@
+warning: in the working copy of 'revos-client/package-lock.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'revos-client/package.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'revos-client/src/App.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'revos-client/src/components/AskRev.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'revos-client/src/components/AuthModal.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'revos-client/src/components/BudgetAnalytics.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'revos-client/src/components/Dashboard.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'revos-client/src/components/PlaidLink.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'revos-client/src/components/Settings.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'revos-client/src/components/SyllabusUpload.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'revos-client/src/components/WeeklyAdvisor.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'revos-client/src/index.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'revos-client/tailwind.config.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'revos-client/tsconfig.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'revos-server/app/app.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'revos-server/app/models.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'revos-server/app/utils/openai.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'revos-server/requirements.txt', LF will be replaced by CRLF the next time Git touches it
+revos-client/package-lock.json
+revos-client/package.json
+revos-client/src/App.tsx
+revos-client/src/components/AskRev.tsx
+revos-client/src/components/BudgetAnalytics.tsx
+revos-client/src/components/Dashboard.tsx
+revos-client/src/components/PlaidLink.tsx
+revos-client/src/components/Settings.tsx
+revos-client/src/components/SyllabusUpload.tsx
+revos-client/src/components/WeeklyAdvisor.tsx
+revos-client/src/index.css
+revos-client/tailwind.config.js
+revos-server/app/app.py
+revos-server/app/models.py
+revos-server/app/utils/openai.py
+revos-server/requirements.txt
+revos-server/revos.db

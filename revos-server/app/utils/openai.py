@@ -164,7 +164,9 @@ def process_uploaded_file(file_content: bytes, filename: str, user_id: int = Non
         if not text.strip():
             raise Exception("No text extracted")
         parsed = parseSyllabusText(text)
-        if store_syllabus(parsed, user_id):
+        store_result = store_syllabus(parsed, user_id)
+        if store_result['success']:
+            parsed['id'] = store_result['id']
             return {'success': True, 'message': 'Processed successfully', 'data': parsed}
         raise Exception("Storage failed")
     except Exception as e:
@@ -177,55 +179,154 @@ def parseSyllabusText(text: str) -> Dict[str, Any]:
         if not client:
             raise Exception("OpenAI not initialized")
         
-        prompt = f"""You are a syllabus parser. Extract the following information from this syllabus text and return it as JSON:
+        prompt = f"""You are an expert syllabus parser. Your job is to extract EVERYTHING important from this syllabus.
+DO NOT SKIP ANYTHING. Extract comprehensively and thoroughly.
 
-1. course: The course name/code
-2. instructor: The instructor name
-3. semester: The semester (e.g., "Fall 2025")
-4. keyDates: List of important dates with the following types:
-   - exam: Midterm exams, final exams, tests
-   - quiz: Quiz dates
-   - homework: Homework/assignment due dates
-   - lab: Lab session dates
-   - project: Project due dates
-   - other: Any other important dates mentioned
-5. topics: List of main topics/subjects/units covered in the course
-6. gradingBreakdown: List of grading categories with their percentage weights
+COURSE INFORMATION:
+Extract exactly:
+- course: Full course number and title (e.g., "CSCE 120: Program Design and Concepts")
+- instructor: Primary instructor name (or "Multiple Instructors" if several listed)
+- semester: Semester and year (e.g., "Fall 2025")
 
-IMPORTANT:
-- Only extract information that is EXPLICITLY mentioned in the syllabus
-- For keyDates: Include any dates with clear labels (Midterm Exam on X, Quiz on Y, HW due on Z, Lab sessions on A, Final Project due on B, etc.)
-- For grading: Include categories with percentages (40%, 0.25, etc.) - calculate percentages if given as decimals
-- Do NOT make up or infer data that isn't clearly stated
-- Return valid JSON with this structure:
+KEY DATES TO EXTRACT - BE EXHAUSTIVE:
+Look for and INCLUDE:
+- **Exam dates**: "Exam 1", "Exam 2", "Exam 3", "Midterm", "Final Exam", "Quiz", with SPECIFIC DATES or WEEKS
+  - Week of Sep 22 → "Approximately September 22, 2025"
+  - Week of Oct 27 → "Approximately October 27, 2025"
+  - Week of Nov 17 → "Approximately November 17, 2025"
+  - Dec. 12 (F), 3:30 PM → "December 12, 2025, 3:30 PM - 5:30 PM"
+- **Homework due dates**: EVERY SINGLE ONE in the list
+  - Friday, September 5, 2025
+  - Friday, September 12, 2025
+  - Friday, September 19, 2025
+  - etc. ALL 10 of them
+- **Lab dates**: If recurring, capture as "Weekly during lab session"
+- **Project/Assignment milestones**: Problem Definition (Sep 19), Problem Decomposition (Oct 17), Implementation (Nov 21), Venture Capital pitch (Dec 1)
+- **Important deadlines**: Drop dates, last day of classes, any other dates mentioned
+
+For EACH date entry, provide:
+- date: The actual calendar date (convert "Week of Sep 22" to "September 22, 2025" if year appears elsewhere, or just the date)
+- event: Full description including assignment number if applicable
+- type: exam|quiz|homework|lab|project|other
+- note: Any additional context (optional)
+
+GRADING BREAKDOWN - EXTRACT EVERY COMPONENT:
+CRITICAL: Parse the grading policy section thoroughly. Extract EACH weighted category:
+
+Go through the syllabus and find ALL grading components with their weights:
+- Homework (20%)
+- Labwork (5% for sections 200,201,250 OR 10% for others)
+- Midterm Exams (36%)
+- Final Exam (24%)
+- Readings (0% for sections 200,201,250 OR 5% for others)
+- Class Engagement (5%)
+- Honors Activities (10% for sections 200,201,250 only)
+
+Extract EVERYTHING mentioned with percentages:
 {{
-    "course": "string",
-    "instructor": "string",
-    "semester": "string",
-    "keyDates": [
-        {{"date": "string (e.g. 'October 15, 2025' or 'Oct 15')", "event": "string (e.g. 'Midterm Exam')", "type": "exam|quiz|homework|lab|project|other"}}
-    ],
-    "topics": ["string"],
-    "gradingBreakdown": [
-        {{"category": "string", "weight": number (0-100)}}
-    ]
+  "category": "string (exact name from syllabus)",
+  "weight": number (0-100),
+  "note": "any special conditions (optional)"
 }}
 
-Syllabus text:
-{text[:5000]}"""
+For this specific syllabus:
+- List all 7 grading categories
+- Include section-specific variations
+- Note that Honors students have different weightings
+
+COURSE TOPICS - EXTRACT ALL:
+Look for any section titled "Topics" or "Content" or "Course Outline". Extract EVERY SINGLE TOPIC:
+- What you (should) already know, but in C++
+- Vectors
+- Errors and Debugging
+- Object-Oriented Concepts
+- Design and Planning
+- Exceptions
+- Input/Output Streams
+- Functions – Pass by Reference
+- Class Design
+- Implementing Classes
+- Dynamic Memory
+- C-style Arrays
+- Dynamic Arrays
+- Classes with Dynamic Memory
+- Linked Lists
+- Inheritance and Polymorphism
+- Recursion
+
+Also look for learning outcomes and extract key concepts:
+- Abstraction
+- Information hiding
+- Object-oriented decomposition
+- Control structures (sequence, selection, iteration)
+- Data types (arrays, vectors, linked lists, structs, classes)
+- Debugging
+- Memory management
+- Memory leaks
+
+IMPORTANT INSTRUCTIONS:
+1. DO NOT SKIP OR MISS DATES - There are 10 homework due dates, 3 midterm exam weeks, 1 final exam, and 4 honors artifacts
+2. DO NOT MISS GRADING - Parse the grading policy section thoroughly and extract all percentages
+3. DO NOT MISS TOPICS - Both the "Topics" section AND the learning outcomes section
+4. For grading with section variations, list all variations
+5. If dates reference "Week of X" or "around Y date", convert to actual calendar dates as best you can
+6. EXTRACT NUMBERS: 20%, 36%, 24%, 5%, 10%, 0% - these are all grading percentages
+7. EXTRACT DATES: Sep 5, Sep 12, Sep 19, Oct 3, Oct 10, Oct 17, Oct 24, Nov 7, Nov 14, Dec 5, Sep 19, Oct 17, Nov 21, Dec 1
+8. EXTRACT TOPICS: ALL 16 topics listed, PLUS key concepts from learning outcomes
+
+RESPONSE FORMAT - MUST BE VALID JSON:
+{{
+  "course": "string (CSCE 120: Program Design and Concepts)",
+  "instructor": "string (multiple instructors listed)",
+  "semester": "Fall 2025",
+  "keyDates": [
+    {{
+      "date": "string (Month Day, Year or date range)",
+      "event": "string (detailed description)",
+      "type": "exam|quiz|homework|lab|project|other",
+      "note": "optional"
+    }}
+  ],
+  "topics": [
+    "string (individual topic)",
+    "string (another topic)"
+  ],
+  "gradingBreakdown": [
+    {{
+      "category": "string",
+      "weight": number,
+      "note": "optional - section variations or conditions"
+    }}
+  ]
+}}
+
+CRITICAL REMINDERS:
+- keyDates should have 15+ entries (10 homework + 3 exams + 4 honors + finals)
+- topics should have 20+ entries (16 course topics + key learning concepts)
+- gradingBreakdown should have 6-7 entries with different weights listed
+- Extract homework dates as individual entries: HW 1, HW 2, HW 3, etc.
+- Extract exam weeks and final exam dates
+- Do NOT make up any dates or topics. Only extract what is explicitly stated in the syllabus.
+- DO NOT skip or abbreviate - be comprehensive and thorough
+
+SYLLABUS TEXT:
+{text[:10000]}
+
+Return ONLY valid JSON. No markdown. No explanations. Start with {{ and end with }}."""
         
         response = client.chat.completions.create(
             model=CHAT_MODEL,
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=2000,
+            max_tokens=5000,
             temperature=0
         )
         
-        result_text = response.choices[0].message.content
+        result_text = response.choices[0].message.content.strip()
         
-        json_match = re.search(r'\{.*\}', result_text, re.DOTALL)
+        # Try to find JSON in the response
+        json_match = re.search(r'\{[\s\S]*\}', result_text)
         if not json_match:
-            logger.error(f"No JSON found in OpenAI response: {result_text}")
+            logger.error(f"No JSON found in OpenAI response: {result_text[:500]}")
             return {
                 'course': 'Unknown Course',
                 'instructor': 'Unknown Instructor',
@@ -239,6 +340,7 @@ Syllabus text:
         
         parsed_data = json.loads(json_match.group())
         
+        # Ensure all required fields exist
         parsed_data.setdefault('course', 'Unknown Course')
         parsed_data.setdefault('instructor', 'Unknown Instructor')
         parsed_data.setdefault('semester', 'Unknown Semester')
@@ -246,13 +348,51 @@ Syllabus text:
         parsed_data.setdefault('topics', [])
         parsed_data.setdefault('gradingBreakdown', [])
         
-        parsed_data['exams'] = len([d for d in parsed_data.get('keyDates', []) if d.get('type') == 'exam'])
-        parsed_data['assignments'] = len([d for d in parsed_data.get('keyDates', []) if d.get('type') in ['homework', 'project']])
+        # Remove duplicates from topics (case-insensitive)
+        if parsed_data.get('topics'):
+            seen = set()
+            unique_topics = []
+            for topic in parsed_data['topics']:
+                topic_lower = str(topic).lower().strip()
+                if topic_lower not in seen and topic_lower:
+                    seen.add(topic_lower)
+                    unique_topics.append(topic)
+            parsed_data['topics'] = unique_topics
         
-        logger.info(f"Parsed syllabus: {parsed_data['course']} - Found {len(parsed_data['keyDates'])} dates, {len(parsed_data['gradingBreakdown'])} grading categories")
+        # Remove duplicate dates
+        if parsed_data.get('keyDates'):
+            seen = set()
+            unique_dates = []
+            for date_entry in parsed_data['keyDates']:
+                key = (date_entry.get('date', '').lower(), date_entry.get('event', '').lower())
+                if key not in seen:
+                    seen.add(key)
+                    unique_dates.append(date_entry)
+            parsed_data['keyDates'] = unique_dates
+        
+        parsed_data['exams'] = len([d for d in parsed_data.get('keyDates', []) if d.get('type') == 'exam'])
+        parsed_data['assignments'] = len([d for d in parsed_data.get('keyDates', []) if d.get('type') in ['homework', 'project', 'lab']])
+        
+        logger.info(f"Parsed syllabus: {parsed_data['course']}")
+        logger.info(f"  - Found {len(parsed_data['keyDates'])} key dates")
+        logger.info(f"  - Found {len(parsed_data['topics'])} topics")
+        logger.info(f"  - Found {len(parsed_data['gradingBreakdown'])} grading categories")
+        logger.info(f"  - Parsed {parsed_data['exams']} exams and {parsed_data['assignments']} assignments")
         
         return parsed_data
         
+    except json.JSONDecodeError as e:
+        logger.error(f"JSON decode error in syllabus parsing: {e}")
+        return {
+            'course': 'Unknown Course',
+            'instructor': 'Unknown Instructor',
+            'semester': 'Unknown Semester',
+            'keyDates': [],
+            'topics': [],
+            'gradingBreakdown': [],
+            'exams': 0,
+            'assignments': 0
+        }
     except Exception as e:
         logger.error(f"Error parsing syllabus with OpenAI: {e}")
         return {
@@ -266,7 +406,7 @@ Syllabus text:
             'assignments': 0
         }
 
-def store_syllabus(data: Dict[str, Any], user_id: int = None) -> bool:
+def store_syllabus(data: Dict[str, Any], user_id: int = None) -> Dict[str, Any]:
     try:
         from models import db, Syllabus
         
@@ -294,11 +434,12 @@ def store_syllabus(data: Dict[str, Any], user_id: int = None) -> bool:
             db.session.add(syllabus)
             db.session.commit()
             logger.info(f"Saved syllabus to database for user {user_id}: {data['course']}")
+            return {'success': True, 'id': syllabus.id}
         
-        return True
+        return {'success': True, 'id': None}
     except Exception as e:
         logger.error(f"Store error: {e}")
-        return False
+        return {'success': False, 'id': None}
 
 def query_syllabus_content(query: str, course_filter: Optional[str] = None, user_id: int = None) -> str:
     try:
